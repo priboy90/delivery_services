@@ -1,0 +1,78 @@
+[tool.poetry]
+name = "delivery_services"
+version = "0.1.0"
+description = "микросервис для cлужбы международной доставки"
+authors = [
+   "Evgen priboy90@mail.ru"
+]
+readme = "README.md"
+package-mode = false  # ← Режим package-mode отключен для нестандартной структуры проекта
+
+[tool.poetry.dependencies]
+# Настройки для прода
+python = "^3.12"
+fastapi = "0.118.0"
+uvicorn = "0.37.0" # сервер для асинхроных приложений
+SQLAlchemy = "2.0.43" # библиотека для работы с СУБД
+pydantic = "^2.5.0"
+pydantic-settings = "^2.1.0"
+psycopg2-binary = "2.9.10" # Python-адаптер для PostgreSQL
+asyncpg = "0.30.0" #асинхронный драйвер для PostgreSQL
+alembic = "1.16.5" # инструмент для управления миграциями
+
+
+[tool.poetry.group.dev.dependencies]
+# Настройки для разработки
+ruff = "^0.13.1"               # линтер и форматтер
+pre-commit = "^4.3"         # фреймворк для pre-commit хуков
+pytest = "^8.4.2"             # фреймворк для тестирования
+pytest-cov = "^7.0.0"         # Плагин для измерения покрытия кода
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# Настройки для ruff (линтер и форматтер)
+[tool.ruff]
+line-length = 120
+select = ["E", "F", "W", "I", "B", "C4", "UP"]
+ignore = ["E501", "C408"]
+target-version = "py310"  # Обновлено для Python 3.10 (требование Django 5.2)
+
+[tool.ruff.isort]
+known-first-party = ["core", "rooms", "bookings"]
+
+# Настройки pytest
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+
+# Настройки coverage
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/admin.py",
+    "*/apps.py",
+    "*/asgi.py",
+    "*/wsgi.py",
+    "*/management/commands/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 80
+exclude_lines = [
+    "pragma: no cover",
+    "def __str__",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if settings.DEBUG:",
+]
