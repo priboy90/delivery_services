@@ -74,7 +74,7 @@ async def health_check():
     }
 
 
-@app.get("/api/v1/health/db")
+@app.get("routers/v1/health/db")
 async def db_health_check():
     """Проверка здоровья базы данных"""
     try:

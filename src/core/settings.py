@@ -66,7 +66,6 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return v
 
-
         return PostgresDsn.build(
             scheme="postgresql+asyncpg",
             username=values.get("POSTGRES_USER"),
@@ -91,7 +90,7 @@ class Settings(BaseSettings):
             password=values.get("POSTGRES_PASSWORD"),
             host=values.get("POSTGRES_SERVER"),
             port=values.get("POSTGRES_PORT"),
-            path=f"/{values.get('POSTGRES_DB', '')}",
+            path=f"{values.get('POSTGRES_DB', '')}",
         )
 
     # Настройки асинхронного пула соединений
