@@ -19,6 +19,9 @@ pydantic-settings = "^2.1.0"
 psycopg2-binary = "2.9.10" # Python-адаптер для PostgreSQL
 asyncpg = "0.30.0" #асинхронный драйвер для PostgreSQL
 alembic = "1.16.5" # инструмент для управления миграциями
+python-multipart = "0.0.20" #для работы с данными формата multipart/form-data
+itsdangerous = "2.2.0" #для обеспечения безопасности данных, передаваемых между системами в открытом виде
+
 
 
 [tool.poetry.group.dev.dependencies]

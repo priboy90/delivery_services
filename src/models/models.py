@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
+import uuid
 
 from sqlalchemy.orm import relationship, validates
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Uuid, DECIMAL, CheckConstraint
@@ -7,12 +8,14 @@ from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
+
 class Users(Base):
     __tablename__ = "users"
 
-    id = Column(Uuid, primary_key=True, index=True)
+    id = Column(Uuid, primary_key=True, default=uuid.uuid4, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     last_activity = Column(DateTime)
+    session_id = Column(String, unique=True, index=True)
 
     packages = relationship("Packages", back_populates="user")
 
@@ -21,6 +24,7 @@ class Users(Base):
         if value and value > datetime.utcnow():
             raise ValueError("Последнее действие не может быть в будущем.")
         return value
+
 
 class Types(Base):
     __tablename__ = "types"
@@ -37,6 +41,7 @@ class Types(Base):
         if len(name) > 50:
             raise ValueError("Слишком длинное имя")
         return name.strip()
+
 
 class Packages(Base):
     __tablename__ = "packages"

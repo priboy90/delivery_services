@@ -4,9 +4,17 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
+from starlette.middleware.sessions import SessionMiddleware
 
 from .core.settings import settings
 from .core.database import engine
+from .core.session import get_session_config
+from .routers import packages
+
+from .models.models import Users
+from .dependencies import Depends, get_current_user
+
+
 
 # Настройка логирования
 logging.basicConfig(
@@ -46,6 +54,10 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+
+# Добавляем middleware для сессий
+app.add_middleware(SessionMiddleware, **get_session_config())
+
 # Настройка CORS
 app.add_middleware(
     CORSMiddleware,
@@ -56,21 +68,19 @@ app.add_middleware(
 )
 
 
+
+
+# подключаем роуты
+app.include_router(packages.router)
+
 @app.get("/")
-async def root():
+async def test_user(current_user: Users = Depends(get_current_user)):
+    """Тестовый эндпоинт для проверки пользователя"""
     return {
-        "message": f"Добро пожаловать в {settings.APP_NAME}",
-        "version": settings.APP_VERSION,
-        "environment": settings.ENVIRONMENT
-    }
-
-
-@app.get("/health")
-async def health_check():
-    return {
-        "status": "healthy",
-        "debug": settings.DEBUG,
-        "environment": settings.ENVIRONMENT
+        "user_id": str(current_user.id),
+        "session_id": current_user.session_id,
+        "created_at": current_user.created_at.isoformat(),
+        "last_activity": current_user.last_activity.isoformat()
     }
 
 

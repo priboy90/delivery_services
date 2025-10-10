@@ -115,6 +115,9 @@ class Settings(BaseSettings):
         env_file_encoding = "utf-8"
         validate_assignment = True
 
+    # Настройки сессий
+    SECRET_KEY : str
+    SESSION_COOKIE_NAME : str
 
 # Глобальный экземпляр настроек
 settings = Settings()
