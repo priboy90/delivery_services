@@ -1,0 +1,10 @@
+<!-- src/app/templates/home.html -->
+{% extends "base.html" %}
+{% block content %}
+<p>Минимальный интерфейс для проверки API.</p>
+<ul>
+  <li>Список посылок — страница <a href="/parcels">/parcels</a></li>
+  <li>API — <span class="badge">/api/*</span>, Swagger — <a href="/docs">/docs</a></li>
+  <li>Дневная аналитика — <span class="badge">GET /api/analytics/daily</span></li>
+</ul>
+{% endblock %}
