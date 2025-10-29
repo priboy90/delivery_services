@@ -1,0 +1,19 @@
+<!-- save as: src/app/static/favicon.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <style>
+      .bg{fill:#10b981;} /* emerald-500 */
+      .fg{fill:#fff;}
+    </style>
+  </defs>
+  <!-- rounded square background -->
+  <rect x="20" y="20" width="216" height="216" rx="46" class="bg"></rect>
+  <!-- parcel lid -->
+  <rect x="72" y="78" width="112" height="36" rx="8" class="fg"></rect>
+  <!-- parcel body -->
+  <rect x="72" y="108" width="112" height="80" rx="10" class="fg"></rect>
+  <!-- lid split -->
+  <rect x="126" y="78" width="4" height="36" class="bg"></rect>
+  <!-- lightning bolt (cutout style) -->
+  <path class="bg" d="M158 92h22l-16 27h24l-14 32h-24l12-20h-20z"></path>
+</svg>

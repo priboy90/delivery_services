@@ -1,0 +1,43 @@
+<!-- src/app/templates/base.html -->
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>{{ title or "Delivery Services" }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="icon" href="{{ url_for('static', path='favicon.svg') }}" type="image/svg+xml">
+
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;margin:2rem;line-height:1.5}
+    header,footer{margin-bottom:1.5rem}
+    .container{max-width:960px;margin:0 auto}
+    a{color:#0b5ed7;text-decoration:none} a:hover{text-decoration:underline}
+    table{border-collapse:collapse;width:100%}
+    th,td{border:1px solid #ddd;padding:.5rem;text-align:left}
+    th{background:#f6f6f6}
+    .muted{color:#666}
+    .badge{display:inline-block;padding:.15rem .4rem;border-radius:.4rem;background:#eef;border:1px solid #ccd;color:#223}
+    fieldset{border:1px solid #ddd;padding:1rem}
+    label{display:inline-block;margin-right:1rem}
+    input{padding:.25rem .4rem}
+    button{padding:.3rem .6rem}
+  </style>
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>{{ title or "Delivery Services" }}</h1>
+  <nav>
+    <a href="/">Главная</a> ·
+    <a href="/parcels">Посылки</a> ·
+    <a href="/docs">Swagger</a>
+  </nav>
+</header>
+<main>
+  {% block content %}{% endblock %}
+</main>
+<footer class="muted">© {{ now().year }} Delivery</footer>
+</div>
+</body>
+</html>

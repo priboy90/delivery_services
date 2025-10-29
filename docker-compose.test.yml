@@ -1,0 +1,11 @@
+services:
+  tests:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.test
+    env_file: .env
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_started }
+      rabbitmq: { condition: service_started }
+      mongo: { condition: service_started }
