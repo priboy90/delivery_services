@@ -1,16 +1,15 @@
-# src/app/api/analytics.py
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 
 from ..services.mongo import get_mongo_from_request
 from .responses import ok
 
-router = APIRouter()
+router = APIRouter(prefix="/analytics", tags=["analytics"])
 
 
 class DailyStats(BaseModel):
@@ -20,20 +19,20 @@ class DailyStats(BaseModel):
     sum_cost_rub: str | None
 
 
-@router.get("/analytics/daily")
+@router.get("/daily")
 async def analytics_daily(
     date_utc: str = Query(default=None, description="YYYY-MM-DD (UTC), если не задано — сегодня"),
     limit: int = Query(default=7, ge=1, le=90),
     mongo: Annotated[object, Depends(get_mongo_from_request)] = None,
 ):
     if mongo is None:
-        raise HTTPException(status_code=503, detail="Analytics storage is not configured")
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Analytics storage is not configured")
 
     if date_utc:
         try:
             day = datetime.strptime(date_utc, "%Y-%m-%d").replace(tzinfo=UTC)
         except ValueError as err:
-            raise HTTPException(status_code=400, detail="Invalid date format, expected YYYY-MM-DD") from err
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid date format, expected YYYY-MM-DD") from err
         start = day
         end = day + timedelta(days=1)
         pipeline = [

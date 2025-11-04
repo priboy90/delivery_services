@@ -1,4 +1,12 @@
-# docker/worker.Dockerfile
+FROM python:3.12-slim AS lint
+
+WORKDIR /src
+RUN pip install --no-cache-dir ruff pre-commit
+COPY .pre-commit-config.yaml pyproject.toml poetry.lock ./
+COPY src src
+COPY tests tests
+RUN ruff check . && pre-commit run --all-files --show-diff-on-failure
+
 FROM python:3.12-slim
 ENV POETRY_VIRTUALENVS_CREATE=false \
     PYTHONDONTWRITEBYTECODE=1 \

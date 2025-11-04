@@ -1,4 +1,3 @@
-# tests/test_misc.py
 import pytest
 
 
@@ -8,6 +7,5 @@ async def test_health_and_docs(client):
     assert r.status_code == 200
     assert r.json().get("ok") in (True, 1)
 
-    # Swagger UI доступен
     r2 = await client.get("/docs")
     assert r2.status_code == 200

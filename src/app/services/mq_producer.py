@@ -1,4 +1,3 @@
-# FILE: src/app/services/mq_producer.py
 from __future__ import annotations
 
 import asyncio
@@ -30,7 +29,6 @@ async def send_register_message(amqp_url: str, payload: Mapping[str, Any]) -> No
         await channel.default_exchange.publish(msg, routing_key=queue.name)
 
 
-# Небольшой CLI для ручной отладки: python -m src.app.services.mq_producer
 if __name__ == "__main__":
 
     async def _main():

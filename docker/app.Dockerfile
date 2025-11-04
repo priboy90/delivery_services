@@ -1,4 +1,3 @@
-# docker/app.Dockerfile
 FROM python:3.12-slim
 
 ENV POETRY_VIRTUALENVS_CREATE=false \
@@ -16,14 +15,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN curl -sSL https://install.python-poetry.org | python3 -
 ENV PATH="/root/.local/bin:$PATH"
 
-# зависимостями можно кешироваться
 COPY pyproject.toml ./pyproject.toml
 RUN poetry install --no-interaction --no-ansi --no-root
 
-# исходники
 COPY ./src ./src
 
-# entrypoint
 COPY docker/app.entrypoint.sh /usr/local/bin/app-entrypoint.sh
 RUN chmod +x /usr/local/bin/app-entrypoint.sh
 

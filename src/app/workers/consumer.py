@@ -1,4 +1,3 @@
-# FILE: src/app/workers/consumer.py
 from __future__ import annotations
 
 import asyncio
@@ -42,7 +41,6 @@ async def handle_message(body: bytes, redis, mongo: Mongo | None) -> None:
     content_usd = Decimal(str(data["content_usd"]))
     cost_rub = calc_shipping(weight_kg, content_usd, usd_rub)
 
-    # пишем в БД; ловим дубликаты корректно
     try:
         async with session_scope() as db:
             exists = await db.scalar(select(ParcelType.id).where(ParcelType.id == int(data["type_id"])))
@@ -61,15 +59,12 @@ async def handle_message(body: bytes, redis, mongo: Mongo | None) -> None:
                 shipping_company_id=None,
             )
             db.add(obj)
-            # гарантируем наличие obj.id до выхода из контекста
             await db.flush()
             parcel_id = obj.id
     except IntegrityError:
-        # Идемпотентность: повторная доставка того же (session_id, public_id)
         log.warning("duplicate_message_ignored", extra={"session_id": session_id, "public_id": session_public_id})
         return
 
-    # аудит best-effort
     if mongo is not None:
         try:
             await log_parcel_calc(

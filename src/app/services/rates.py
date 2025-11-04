@@ -1,4 +1,3 @@
-# FILE: src/app/services/rates.py
 from __future__ import annotations
 
 from datetime import timedelta
@@ -8,9 +7,9 @@ import httpx
 from fastapi import Request
 from redis.asyncio import Redis
 
-DEFAULT_USD_RUB = Decimal("100.00")  # безопасный фолбэк для dev
+DEFAULT_USD_RUB = Decimal("100.00")
 CACHE_KEY = "usd_rub"
-CACHE_TTL_SECONDS = int(timedelta(hours=3).total_seconds())  # чуть короче, чем было
+CACHE_TTL_SECONDS = int(timedelta(hours=3).total_seconds())
 
 
 async def _fetch_usd_rub_from_cbr(timeout: float = 3.0) -> Decimal | None:
@@ -30,7 +29,6 @@ async def _fetch_usd_rub_from_cbr(timeout: float = 3.0) -> Decimal | None:
             value = Decimal(str(val)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
             return value
     except Exception:
-        # не блокируем расчёты — вернём None и пусть сработает фолбэк
         return None
 
 
@@ -39,22 +37,18 @@ async def get_usd_rub(redis: Redis | None) -> Decimal:
     Пытаемся получить курс из Redis; при промахе — запрашиваем ЦБ, кладём в кэш.
     Возвращаем Decimal с двумя знаками.
     """
-    # 1) сперва — из Redis
     if redis:
         try:
             raw = await redis.get(CACHE_KEY)
             if raw:
                 return Decimal(str(raw)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         except Exception:
-            # кэш не должен ломать бизнес-логику
             pass
 
-    # 2) если нет — пробуем сходить наружу
     fetched = await _fetch_usd_rub_from_cbr()
     if fetched is None:
         fetched = DEFAULT_USD_RUB
 
-    # 3) кэшируем best-effort
     if redis:
         try:
             await redis.setex(CACHE_KEY, CACHE_TTL_SECONDS, str(fetched))

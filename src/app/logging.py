@@ -8,7 +8,7 @@ from typing import Any
 try:
     import orjson
 except Exception:
-    orjson = None  # type: ignore
+    orjson = None
 
 
 class OrjsonFormatter(logging.Formatter):

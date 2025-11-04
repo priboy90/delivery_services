@@ -1,4 +1,3 @@
-# FILE: src/alembic/versions/0001_init.py
 from __future__ import annotations
 
 import sqlalchemy as sa
@@ -45,12 +44,14 @@ def upgrade() -> None:
     op.create_index("ix_parcels_session_id", "parcels", ["session_id"])
     op.create_index("ix_parcels_type_id", "parcels", ["type_id"])
 
-    # (опционально) частичный индекс для быстрых выборок «не привязанных»
-    op.execute("CREATE INDEX IF NOT EXISTS ix_parcels_unbound " "ON parcels (shipping_company_id)" " WHERE shipping_company_id IS NULL")
+    op.execute("""
+        CREATE INDEX IF NOT EXISTS ix_parcels_unbound
+        ON parcels (shipping_company_id)
+        WHERE shipping_company_id IS NULL
+    """)
 
 
 def downgrade() -> None:
-    # сначала дропаем зависящие объекты
     op.execute("DROP INDEX IF EXISTS ix_parcels_unbound")
     op.drop_index("ix_parcels_type_id", table_name="parcels")
     op.drop_index("ix_parcels_session_id", table_name="parcels")

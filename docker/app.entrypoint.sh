@@ -3,14 +3,12 @@ set -euo pipefail
 
 echo "[entrypoint] starting app…"
 
-# Чтобы импорты находили пакеты и при миграциях, и при запуске сервера
 export PYTHONPATH="/app:/app/src:${PYTHONPATH:-}"
 
 PG_HOST="${POSTGRES_HOST:-db}"
 PG_PORT="${POSTGRES_PORT:-5432}"
 echo "[entrypoint] waiting for postgres at ${PG_HOST}:${PG_PORT}…"
 
-# Ждём Postgres без nc/pg_isready — чистый Python socket
 python - <<'PY'
 import os, socket, time, sys
 host = os.getenv("POSTGRES_HOST", "db")
@@ -28,7 +26,6 @@ while True:
         time.sleep(0.5)
 PY
 
-# Ищем alembic.ini
 ALEMBIC_CONFIG_CANDIDATES=(
   "/app/src/alembic.ini"
   "/app/alembic.ini"
@@ -53,7 +50,6 @@ fi
 echo "[entrypoint] applying alembic migrations using ${ALEMBIC_CFG}…"
 alembic -c "${ALEMBIC_CFG}" upgrade head
 
-# Какой модуль грузить uvicorn (по умолчанию — src.app.main:app)
 UVICORN_APP="${UVICORN_APP:-src.app.main:app}"
 PORT="${PORT:-8000}"
 

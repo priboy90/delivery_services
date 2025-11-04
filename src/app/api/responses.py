@@ -1,12 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, TypedDict
+from typing import Any
 
-
-class ErrorPayload(TypedDict, total=False):
-    code: str
-    message: str
-    details: dict[str, Any]
+from ..schemas.errors import ErrorPayload
 
 
 def ok(result: Any) -> dict[str, Any]:

@@ -1,6 +1,6 @@
-# FILE: src/app/main.py
 from __future__ import annotations
 
+import logging
 from contextlib import asynccontextmanager
 from datetime import datetime
 from decimal import Decimal
@@ -12,58 +12,30 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, ORJSONRe
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from redis.asyncio import from_url as redis_from_url
-from sqlalchemy import select
 
 from .api.analytics import router as analytics_router
 from .api.parcels import router as parcels_router
 from .api.responses import err, ok
 from .api.types import router as types_router
 from .config import get_settings
-from .db.postgres import get_engine, session_scope
+from .db.postgres import get_engine
 from .logging import setup_logging
 from .middleware.session import SessionMiddleware
-from .models.parcel_type import ParcelType
 from .services.mongo import Mongo
 
+log = logging.getLogger("app.main")
+
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
+STATIC_DIR = Path(__file__).resolve().parent / "static"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 templates.env.globals["now"] = datetime.utcnow
 
 
-async def _seed_parcel_types() -> None:
-    """
-    Идемпотентный сидер типов посылок.
-    Требования ТЗ: 3 предзаданных типа (id: 1..3).
-    Безопасен при повторных запусках; не роняет приложение при конфликте.
-    """
-    required = [
-        (1, "одежда"),
-        (2, "электроника"),
-        (3, "разное"),
-    ]
-    async with session_scope() as session:
-        existing = set(await session.scalars(select(ParcelType.name)))
-        created = False
-        for pid, name in required:
-            if name not in existing:
-                session.add(ParcelType(id=pid, name=name))
-                created = True
-        if created:
-            pass
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Жизненный цикл приложения:
-    - проверка соединения с Postgres
-    - инициализация Redis
-    - опциональная инициализация Mongo
-    - безопасный сид типов
-    - корректное закрытие ресурсов
-    """
-    s = get_settings()
+    """Инициализация/закрытие инфраструктуры (DB ping, Redis, Mongo)."""
     setup_logging()
+    s = get_settings()
 
     engine = get_engine()
     async with engine.begin() as conn:
@@ -73,16 +45,13 @@ async def lifespan(app: FastAPI):
 
     mongo: Mongo | None = None
     if s.mongodb_url:
-        mongo = Mongo(s.mongodb_url, db_name="delivery")
-        await mongo.connect()
+        try:
+            mongo = Mongo(s.mongodb_url, db_name="delivery")
+            await mongo.connect()
+        except Exception:
+            mongo = None
+            log.exception("Mongo init failed")
     app.state.mongo = mongo
-
-    try:
-        await _seed_parcel_types()
-    except Exception as e:
-        import logging
-
-        logging.getLogger(__name__).warning("Seeding parcel types skipped: %s", e)
 
     try:
         yield
@@ -92,19 +61,17 @@ async def lifespan(app: FastAPI):
             try:
                 await redis.aclose()
             except Exception:
-                pass
+                log.warning("Failed to close Redis", exc_info=True)
+
         if mongo is not None:
             try:
                 await mongo.close()
             except Exception:
-                pass
+                log.warning("Failed to close Mongo", exc_info=True)
 
 
 def create_app() -> FastAPI:
-    """
-    Фабрика приложения FastAPI.
-    Важно: роутеры подключаются под префиксом из настроек (по ТЗ — /api/v1).
-    """
+    """Фабрика приложения: минимальная сборка + HTML страницы и статика."""
     s = get_settings()
     app = FastAPI(
         title=s.project_name,
@@ -116,13 +83,21 @@ def create_app() -> FastAPI:
 
     app.add_middleware(SessionMiddleware)
 
-    static_dir = Path(__file__).resolve().parent / "static"
-    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
     @app.get("/favicon.ico")
-    async def favicon() -> FileResponse:
-        return FileResponse(static_dir / "favicon.ico")
+    async def favicon_ico() -> FileResponse:
+        return FileResponse(STATIC_DIR / "favicon.svg")
 
+    @app.get("/", response_class=HTMLResponse)
+    async def home(request: Request) -> HTMLResponse:
+        return templates.TemplateResponse("home.html", {"request": request})
+
+    @app.get("/parcels", response_class=HTMLResponse)
+    async def parcels_page(request: Request) -> HTMLResponse:
+        return templates.TemplateResponse("parcels.html", {"request": request})
+
+    # ошибки
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(_: Request, exc: RequestValidationError) -> ORJSONResponse:
         def to_primitive(v):
@@ -134,8 +109,7 @@ def create_app() -> FastAPI:
                 return [to_primitive(x) for x in v]
             return v
 
-        cleaned_errors = to_primitive(exc.errors())
-        payload = err("validation_error", "Validation failed", {"errors": cleaned_errors})
+        payload = err("validation_error", "Validation failed", {"errors": to_primitive(exc.errors())})
         payload["code"] = "validation_error"
         return ORJSONResponse(status_code=422, content=payload)
 
@@ -150,21 +124,12 @@ def create_app() -> FastAPI:
 
     api_prefix = s.api_v1_prefix
     app.include_router(types_router, prefix=api_prefix, tags=["types"])
-    app.include_router(parcels_router, prefix=api_prefix, tags=["parcels"])
-    app.include_router(analytics_router, prefix=api_prefix, tags=["analytics"])
+    app.include_router(parcels_router, prefix=api_prefix)
+    app.include_router(analytics_router, prefix=api_prefix)
 
-    # Healthcheck
     @app.get("/health")
     async def health() -> JSONResponse:
         return JSONResponse(ok(True))
-
-    @app.get("/", response_class=HTMLResponse)
-    async def home(request: Request) -> HTMLResponse:
-        return templates.TemplateResponse("home.html", {"request": request})
-
-    @app.get("/parcels", response_class=HTMLResponse)
-    async def parcels_page(request: Request) -> HTMLResponse:
-        return templates.TemplateResponse("parcels.html", {"request": request})
 
     return app
 

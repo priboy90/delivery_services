@@ -1,10 +1,8 @@
-# src/app/db/base.py
 from __future__ import annotations
 
 from sqlalchemy import MetaData
 from sqlalchemy.orm import DeclarativeBase
 
-# единая naming-конвенция для Alembic (хорошо влияет на автогенерацию)
 metadata = MetaData(
     naming_convention={
         "ix": "ix_%(column_0_label)s",

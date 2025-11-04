@@ -1,4 +1,3 @@
-# src/app/middleware/session.py
 from __future__ import annotations
 
 import uuid
@@ -73,5 +72,4 @@ class EnsureSessionIDMiddleware(BaseHTTPMiddleware):
         return response
 
 
-# Алиас, чтобы существующий импорт `SessionMiddleware` продолжал работать
 SessionMiddleware = EnsureSessionIDMiddleware

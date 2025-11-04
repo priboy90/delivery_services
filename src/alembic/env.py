@@ -1,37 +1,37 @@
-# alembic/env.py
-
 from __future__ import annotations
 
 import asyncio
 import importlib
+import os
 from logging.config import fileConfig
 
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import create_async_engine
-from src.app.models.base import Base  # target_metadata
+from src.app.models.base import Base
 
 from alembic import context
 
-# -----------------------------------------------------------------------------
-# Alembic Config
-# -----------------------------------------------------------------------------
 config = context.config
 
+url = (
+    os.getenv("DATABASE_URL")
+    or f"postgresql+asyncpg://{os.getenv('POSTGRES_USER', 'postgres')}:"
+    f"{os.getenv('POSTGRES_PASSWORD', 'postgres')}@"
+    f"{os.getenv('POSTGRES_HOST', 'db')}:"
+    f"{os.getenv('POSTGRES_PORT', '5432')}/"
+    f"{os.getenv('POSTGRES_DB', 'postgres')}"
+)
+config.set_main_option("sqlalchemy.url", url)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-
 importlib.import_module("src.app.models.parcel")
 importlib.import_module("src.app.models.parcel_type")
-
 
 target_metadata = Base.metadata
 
 
-# -----------------------------------------------------------------------------
-# Offline migrations
-# -----------------------------------------------------------------------------
 def run_migrations_offline() -> None:
     """Запуск миграций в offline-режиме (без подключения к БД)."""
     url = config.get_main_option("sqlalchemy.url")
@@ -52,9 +52,6 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-# -----------------------------------------------------------------------------
-# Online migrations
-# -----------------------------------------------------------------------------
 def do_run_migrations(connection) -> None:
     """Синхронная часть, которую Alembic вызывает внутри run_sync."""
     context.configure(
@@ -82,9 +79,6 @@ async def run_migrations_online() -> None:
     await engine.dispose()
 
 
-# -----------------------------------------------------------------------------
-# Entrypoint
-# -----------------------------------------------------------------------------
 if context.is_offline_mode():
     run_migrations_offline()
 else:

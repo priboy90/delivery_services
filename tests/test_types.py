@@ -1,4 +1,3 @@
-# tests/test_types.py
 import pytest
 
 
@@ -7,7 +6,6 @@ async def test_get_types(client, api_prefix):
     r = await client.get(f"{api_prefix}/types")
     assert r.status_code == 200
     data = r.json()
-    # Ожидаем стандартизованный ответ: ok: true и payload
     assert isinstance(data, dict)
     assert data.get("ok") is True
     items = data.get("data") or data.get("result") or data.get("items") or data.get("payload")

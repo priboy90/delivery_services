@@ -13,9 +13,3 @@ connect:
 
 clean:
 	docker-compose down -v
-
-#make help      # Показать все команды
-#make up        # Запустить базу данных
-#make logs      # Показать логи
-#make connect   # Подключиться к БД
-#make down      # Остановить базу

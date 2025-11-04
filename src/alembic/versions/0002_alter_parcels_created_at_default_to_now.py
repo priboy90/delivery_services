@@ -1,4 +1,3 @@
-# FILE: src/alembic/versions/0002_init.py
 from __future__ import annotations
 
 import sqlalchemy as sa
@@ -12,7 +11,6 @@ depends_on = None
 
 
 def upgrade():
-    # приведение server_default к now() (PostgreSQL)
     op.alter_column(
         "parcels",
         "created_at",
@@ -23,7 +21,6 @@ def upgrade():
 
 
 def downgrade():
-    # откат server_default
     op.alter_column(
         "parcels",
         "created_at",
