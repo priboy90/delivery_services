@@ -1,0 +1,80 @@
+# ФАЙЛ: pyproject.toml (корень репозитория)
+
+[tool.poetry]
+name = "delivery_services"
+version = "0.1.0"
+description = "микросервис для cлужбы международной доставки"
+authors = ["Evgen <priboy90@mail.ru>"]
+readme = "README.md"
+# package-mode = false  # ← УДАЛИТЬ: для src-layout лучше оставить режим по умолчанию (package-mode=true)
+packages = [{ include = "app", from = "src" }]  # ← Явно объявляем пакет из src-layout
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "0.118.0"
+uvicorn = {version = "0.37.0", extras = ["standard"]}  # опционально: но рекомендуется
+SQLAlchemy = "2.0.43"
+pydantic = "^2.9.0"
+pydantic-settings = "^2.5.2"
+asyncpg = "0.30.0"
+alembic = "1.13.3"
+itsdangerous = "2.2.0"
+python-multipart = "0.0.20"
+aio-pika = "^9.4.3"
+redis = {version = "^5.0.0", extras = ["hiredis"]}
+httpx = "^0.27.2"
+jinja2 = "^3.1.4"
+motor = "^3.5.1"
+orjson = "^3.10.7"
+psycopg = {version = "^3.2.3", extras = ["binary"]}
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.6.9"
+pre-commit = "^4.0.1"
+pytest = "^8.3.3"
+pytest-cov = "^5.0.0"
+pytest-asyncio = "^0.23.8"
+anyio = "^4.6.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 200
+src = ["src", "tests"]
+exclude = [".venv", "dist", "build", "migrations"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "RUF"]
+ignore = ["RUF001", "RUF002", "RUF003"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+combine-as-imports = true
+
+[tool.ruff.format]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 80
+exclude_lines = [
+    "pragma: no cover",
+    "def __str__",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]
